@@ -1,0 +1,12 @@
+{
+  "name": "iangregson",
+  "owner": {
+    "name": "Ian Gregson",
+    "url": "https://github.com/iangregsondev"
+  },
+  "description": "Ian Gregson's Claude Code plugins, each maintained in its own repository.",
+  "metadata": {
+    "version": "0.0.0"
+  },
+  "plugins": []
+}

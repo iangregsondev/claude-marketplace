@@ -1,0 +1,84 @@
+name: Plugin proposal
+description: Propose a plugin be added to the catalogue, or an entry be changed.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first.
+
+        For repo configuration, docs, or CI, use the **Tooling or repo change** template instead.
+
+        **This is an author-scoped catalogue.** The `iangregson` marketplace means "plugins Ian Gregson maintains", and entries here are deliberately unpinned — which is only defensible for repos we control. A third-party plugin will almost certainly be declined, with a pointer to publishing your own marketplace instead; it is one file. See [CONTRIBUTING.md](https://github.com/iangregsondev/claude-marketplace/blob/main/CONTRIBUTING.md#can-i-add-my-own-plugin-to-this-catalogue). You are still welcome to make the case here.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What are you proposing?
+      options:
+        - A new plugin in the catalogue
+        - A change to an existing entry
+    validations:
+      required: true
+
+  - type: input
+    id: repo
+    attributes:
+      label: Plugin repository
+      description: The repo holding the plugin's `.claude-plugin/plugin.json`.
+      placeholder: owner/repo
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: Plugin name
+      description: >
+        As it appears in that repo's `plugin.json`. First-party plugins keep the
+        `iangregson-` prefix, since plugin names are unique per install
+        rather than per marketplace.
+      placeholder: iangregson-something
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Proposed catalogue description
+      description: >
+        One generic line. It must not enumerate the plugin's skills or
+        categories — the entry lives here, so anything tracking the plugin's
+        contents goes stale the next time that repo changes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it belong in this catalogue?
+      description: >
+        What it does, and who it is for. If it is not first-party, say why
+        publishing your own marketplace would be worse.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: preconditions
+    attributes:
+      label: Preconditions
+      description: >
+        The catalogue reads the plugin repo's default branch at install time, so
+        these have to be true before an entry can work.
+      options:
+        - label: The repository is public.
+          required: false
+        - label: >
+            `.claude-plugin/plugin.json` exists on its default branch — that is
+            the file this catalogue reads, not its `marketplace.json`.
+          required: false
+        - label: >
+            Its default branch is CI-gated, since entries here carry no `ref` or
+            `sha` and users track whatever is on it.
+          required: false
