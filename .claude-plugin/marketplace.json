@@ -8,5 +8,24 @@
   "metadata": {
     "version": "1.0.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "iangregson-skills",
+      "source": {
+        "source": "github",
+        "repo": "iangregsondev/agent-skills"
+      },
+      "description": "A general-purpose collection of agent skills for everyday development work.",
+      "category": "engineering"
+    },
+    {
+      "name": "iangregson-graphify",
+      "source": {
+        "source": "github",
+        "repo": "iangregsondev/claude-graphify-plugin"
+      },
+      "description": "Claude Code hooks that make graphify knowledge graphs the first stop for answers about a repository.",
+      "category": "engineering"
+    }
+  ]
 }
