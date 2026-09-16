@@ -1,5 +1,11 @@
 # iangregson
 
+## 1.1.0
+
+### Minor Changes
+
+- [#5](https://github.com/iangregsondev/claude-marketplace/pull/5) [`0cc9147`](https://github.com/iangregsondev/claude-marketplace/commit/0cc91479db318d85777970db509cf5b4e7ba37a3) Thanks [@iangregsondev](https://github.com/iangregsondev)! - Add `iangregson-skills` and `iangregson-graphify` to the catalogue.
+
 ## 1.0.0
 
 ### Major Changes
