@@ -24,7 +24,10 @@ Restart your Claude Code session afterwards — plugins load at session start, s
 
 ## Catalogued plugins
 
-No plugins yet. Each one gets a row here when it is added.
+| Plugin                | Repository                                                                                      | Description                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `iangregson-skills`   | [iangregsondev/agent-skills](https://github.com/iangregsondev/agent-skills)                     | A general-purpose collection of agent skills for everyday development work.                          |
+| `iangregson-graphify` | [iangregsondev/claude-graphify-plugin](https://github.com/iangregsondev/claude-graphify-plugin) | Claude Code hooks that make graphify knowledge graphs the first stop for answers about a repository. |
 
 ## Updating
 
