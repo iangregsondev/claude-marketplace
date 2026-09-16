@@ -1,0 +1,131 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Monday, 06:00 UTC. The catalogue is static; the repositories it names are not.
+    # A plugin repo can be renamed, archived, or flipped to private long after the last
+    # commit here, and no push-triggered run would ever notice. This is the only trigger
+    # that catches that drift.
+    - cron: "0 6 * * 1"
+
+# Neither job writes anything or reads a secret. Job 2 is unauthenticated on purpose.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  manifest:
+    name: manifest shape
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
+        with:
+          node-version-file: package.json
+          cache: true
+
+      # The Claude Code CLI comes from the lockfile, so a run validates with the same
+      # CLI a local `vp run ready` does. Dependabot bumps it weekly.
+      - name: Install Dependencies
+        run: vp install
+
+      - name: Format, lint, type check
+        run: vp check
+
+      - name: Test
+        run: vp test
+
+      # `plugin validate` reads local files only — no login, no onboarding, no token.
+      # Strict mode turns warnings into errors, so it also fails on unrecognized fields and
+      # on a missing marketplace-level description.
+      - name: Validate the manifest
+        run: vp run validate:marketplace
+
+  sources:
+    name: source resolution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # `claude plugin validate` does not resolve sources: an entry pointing at a
+      # repository that does not exist passes it cleanly. In a file whose entire content
+      # is repository paths, that is the most likely defect, so it gets its own job.
+      - name: Verify every plugin source resolves
+        env:
+          MANIFEST: .claude-plugin/marketplace.json
+        run: |
+          set -uo pipefail
+
+          # `mapfile` below succeeds even when jq fails, which would leave this job green
+          # on a manifest that does not parse. Fail on the parse first.
+          if ! jq -e . "$MANIFEST" > /dev/null; then
+            echo "::error::$MANIFEST is not valid JSON"
+            exit 1
+          fi
+
+          # Read into an array rather than piping into `while`: the loop body of a pipeline
+          # runs in a subshell, where the failure flag would not survive the loop.
+          mapfile -t entries < <(jq -r '.plugins[] | [.name, .source.source, .source.repo // ""] | @tsv' "$MANIFEST")
+
+          body=$(mktemp)
+          failed=0
+
+          # Every entry is checked before the job exits, so one run reports every broken
+          # entry rather than only the first.
+          for entry in "${entries[@]}"; do
+            IFS=$'\t' read -r name kind repo <<< "$entry"
+
+            # An entry this job cannot check must fail rather than pass quietly.
+            if [ "$kind" != "github" ]; then
+              echo "::error::$name: source type '$kind' is not one this job knows how to resolve"
+              failed=1
+              continue
+            fi
+
+            url="https://raw.githubusercontent.com/$repo/HEAD/.claude-plugin/plugin.json"
+
+            # Unauthenticated on purpose: a 200 here proves the repository is public, which
+            # is what a stranger running `marketplace add` needs. A token would succeed
+            # against a private repo and hide exactly the failure this job exists to catch.
+            #
+            # No -f, so a 404 counts as a completed transfer and is not retried;
+            # --retry-all-errors then covers transport failures only, so a network blip on
+            # the weekly run is not reported as drift.
+            if ! code=$(curl -sSL --retry 3 --retry-delay 2 --retry-all-errors \
+                          -o "$body" -w '%{http_code}' "$url"); then
+              echo "::error::$name: could not reach $url"
+              failed=1
+              continue
+            fi
+
+            if [ "$code" != "200" ]; then
+              echo "::error::$name: $url returned HTTP $code — repository missing, renamed, or private"
+              failed=1
+              continue
+            fi
+
+            if ! actual=$(jq -er .name "$body" 2> /dev/null); then
+              echo "::error::$name: $url is not a plugin manifest carrying a name"
+              failed=1
+              continue
+            fi
+
+            # A mismatch means the plugin installs under a different namespace than the
+            # catalogue advertises, so `iangregson-skills:tdd` would not be what a user gets.
+            if [ "$actual" != "$name" ]; then
+              echo "::error::$name: its plugin.json says '$actual' — the plugin would install under a name the catalogue does not advertise"
+              failed=1
+              continue
+            fi
+
+            echo "ok: $name -> $repo"
+          done
+
+          exit "$failed"

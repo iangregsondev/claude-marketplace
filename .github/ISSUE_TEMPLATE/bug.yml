@@ -1,0 +1,70 @@
+name: Bug report
+description: A plugin won't install from this catalogue, or something in the repo is broken.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first.
+
+        **This catalogue only names plugins — it does not contain them.** If a skill misbehaves once installed, report it in that plugin's own repository. Report it here when the problem is _getting_ the plugin: it won't install, resolves to the wrong repo, or shows a wrong description.
+
+        **Do not report security vulnerabilities here** — use [private reporting](https://github.com/iangregsondev/claude-marketplace/security/advisories/new) instead. See [SECURITY.md](https://github.com/iangregsondev/claude-marketplace/blob/main/SECURITY.md).
+
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin
+      description: Which catalogued plugin? Leave blank if this is about the repo itself.
+      placeholder: iangregson-skills
+    validations:
+      required: false
+
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The exact command, including the `@iangregson` suffix if you used one.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The output, including any error, verbatim.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: dropdown
+    id: marketplace-added
+    attributes:
+      label: Does `claude plugin marketplace list` show `iangregson`?
+      description: >
+        This separates "the catalogue is wrong" from "the marketplace was never
+        added", which are different bugs with different fixes.
+      options:
+        - "Yes"
+        - "No"
+        - Haven't checked
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Claude Code version
+      description: From `claude --version`.
+      placeholder: 2.0.0
+    validations:
+      required: false
